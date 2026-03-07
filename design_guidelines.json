@@ -1,0 +1,278 @@
+{
+  "identity": {
+    "name": "Social Impact Observatory",
+    "persona": "The Data Journalist",
+    "mission": "Transform raw community noise into clear, actionable social patterns. Prioritize clarity, truth, and human context over decoration.",
+    "tone": "Objective, Empathetic, Precise, Modern",
+    "anti_patterns": [
+      "No generic 'SaaS Blue' gradients",
+      "No 'Inter' font for headings",
+      "No center-aligned everything",
+      "No decorative charts that don't convey data",
+      "No 'cute' AI emojis (robot, brain, sparkles) in serious contexts"
+    ]
+  },
+  "visual_language": {
+    "theme": "light",
+    "colors": {
+      "palette_archetype": "Swiss & High-Contrast (Archetype 4) + Organic Accents (Archetype 1)",
+      "primary": {
+        "name": "Deep Obsidian",
+        "hex": "#0F172A",
+        "usage": "Headings, Primary Buttons, Strong Borders"
+      },
+      "secondary": {
+        "name": "Clay Brick",
+        "hex": "#C2410C",
+        "usage": "Highlights, Important Alerts, 'Before Awareness' metrics"
+      },
+      "accent": {
+        "name": "Emerald Growth",
+        "hex": "#10B981",
+        "usage": "Positive Change, 'After Awareness' metrics, Success States"
+      },
+      "neutral": {
+        "background": "#F8FAFC",
+        "surface": "#FFFFFF",
+        "border": "#E2E8F0",
+        "text_muted": "#64748B"
+      },
+      "forbidden": [
+        "#7351B7",
+        "#1B93A4"
+      ]
+    },
+    "typography": {
+      "headings": {
+        "family": "Manrope",
+        "weights": [
+          600,
+          800
+        ],
+        "usage": "H1, H2, H3, Hero Text",
+        "features": "tight-tracking (-0.02em)"
+      },
+      "body": {
+        "family": "IBM Plex Sans",
+        "weights": [
+          400,
+          500
+        ],
+        "usage": "Paragraphs, UI Labels, Data Tables",
+        "features": "high-legibility"
+      },
+      "mono": {
+        "family": "JetBrains Mono",
+        "usage": "Code snippets, Raw Data Values"
+      }
+    },
+    "surfaces": {
+      "cards": "Flat background (#FFFFFF), 1px border (#E2E8F0), no shadow default. Hover: shadow-md transition-all duration-300",
+      "glass": "bg-white/80 backdrop-blur-md border-b border-white/20 (for sticky headers only)",
+      "inputs": "bg-slate-50 border-slate-200 focus:bg-white focus:border-slate-900 transition-colors rounded-md"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "buttons": "rounded-md",
+      "cards": "rounded-xl"
+    }
+  },
+  "layout_system": {
+    "spacing_scale": "Tailwind standard, but start at p-6 for containers",
+    "grid_strategy": {
+      "dashboard": "Bento Grid (Mode B): Dense, data-heavy, minimal gaps (gap-4)",
+      "marketing": "Tetris Grid (Mode A): Asymmetrical, wide gaps (gap-12)"
+    },
+    "max_width": "max-w-7xl mx-auto",
+    "alignment": "Left-align mostly. Center only for Hero headlines."
+  },
+  "component_library": {
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 shadow-sm",
+      "secondary": "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50",
+      "ghost": "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+    },
+    "charts": {
+      "library": "Recharts (wrapped in Shadcn UI Chart components)",
+      "style": "Minimalist. Remove grid lines where possible. Rounded bar ends.",
+      "colors": [
+        "#0F172A",
+        "#C2410C",
+        "#10B981",
+        "#F59E0B",
+        "#6366F1"
+      ]
+    },
+    "tables": {
+      "style": "Clean rows. No vertical borders. Header: Uppercase, text-xs, text-slate-500, tracking-wider.",
+      "interaction": "Highlight row on hover. Sticky header."
+    },
+    "forms": {
+      "style": "Stacked labels. clear helper text. Validation errors in red-600.",
+      "animation": "Subtle shake on error."
+    }
+  },
+  "page_blueprints": {
+    "home": {
+      "type": "Marketing",
+      "structure": [
+        {
+          "section": "Hero",
+          "layout": "Split: Left Text (H1 'Decode Community Patterns'), Right Image (Abstract Data Visualization)",
+          "elements": [
+            "H1: Manrope ExtraBold",
+            "Subtext: IBM Plex Sans",
+            "CTA Group: 'Start Analysis' (Primary), 'Learn More' (Secondary)"
+          ]
+        },
+        {
+          "section": "Features",
+          "layout": "Grid-cols-3 (Bento style). Cards with icons.",
+          "content": [
+            "Independent Analysis",
+            "Visual Patterns",
+            "Instant Insights"
+          ]
+        }
+      ]
+    },
+    "manual_entry": {
+      "type": "App",
+      "layout": "Split View (Desktop)",
+      "left_panel": {
+        "width": "w-1/3",
+        "content": "Form Container. Sticky position.",
+        "fields": [
+          "Area/Block (Select/Input)",
+          "Issue Type (Select)",
+          "Phase (Radio/Select: Before/After)",
+          "Count (Number)"
+        ],
+        "actions": [
+          "Add Row Button (Full width)",
+          "Analyze Button (Primary, Floating or Fixed at bottom)"
+        ]
+      },
+      "right_panel": {
+        "width": "w-2/3",
+        "content": "Results Feed",
+        "sections": [
+          "Data Table (Preview of entered rows)",
+          "Analysis Section (Appears after clicking Analyze)",
+          "Insight Card (Highlighted box with interpretation)",
+          "Charts Grid (Pie, Bar, Line)"
+        ]
+      }
+    },
+    "text_input": {
+      "type": "App",
+      "layout": "Single Column (Focus Mode)",
+      "structure": [
+        "Header: 'Natural Language Analysis'",
+        "Large Textarea (Min height 300px, monospace font for input)",
+        "Action Bar: 'Parse & Analyze'",
+        "Results Section (Appears below)"
+      ]
+    },
+    "file_upload": {
+      "type": "App",
+      "layout": "Centered Dropzone",
+      "structure": [
+        "Dropzone Area (Dashed border, heavy padding)",
+        "Supported formats icons (CSV, XLSX, PDF)",
+        "Progress Bar (Animated stripes)",
+        "Results Dashboard (Full width below upload)"
+      ]
+    },
+    "dashboard_results": {
+      "type": "Component",
+      "usage": "Embedded in Manual/Text/File pages",
+      "structure": "Vertical Flow",
+      "elements": [
+        {
+          "name": "Summary Cards",
+          "layout": "Grid-cols-4",
+          "metrics": [
+            "Total Count",
+            "Top Issue",
+            "Most Impacted Area",
+            "Awareness Change %"
+          ]
+        },
+        {
+          "name": "Charts Row 1",
+          "layout": "Grid-cols-2",
+          "charts": [
+            "Issue Distribution (Pie)",
+            "Area Comparison (Bar)"
+          ]
+        },
+        {
+          "name": "Charts Row 2",
+          "layout": "Full Width",
+          "charts": [
+            "Before vs After Awareness (Line/Area Chart)"
+          ]
+        },
+        {
+          "name": "AI Insight",
+          "style": "Border-l-4 border-emerald-500 bg-emerald-50 p-6 rounded-r-lg",
+          "content": "Auto-generated text interpretation"
+        }
+      ]
+    }
+  },
+  "assets": {
+    "icons": {
+      "library": "Lucide React",
+      "style": "Stroke width 1.5px (Fine)",
+      "mapping": {
+        "analysis": "BarChart3",
+        "community": "Users",
+        "upload": "UploadCloud",
+        "admin": "ShieldCheck",
+        "manual": "PenTool"
+      }
+    },
+    "images": {
+      "hero_main": "https://images.unsplash.com/photo-1758270705317-3ef6142d306f?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "analysis_preview": "https://images.unsplash.com/photo-1745301754104-4effee07d6ac?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "community_discussion": "https://images.unsplash.com/photo-1555069855-e580a9adbf43?crop=entropy&cs=srgb&fm=jpg&q=85"
+    }
+  },
+  "motion": {
+    "page_transition": "Opacity fade (0.3s ease)",
+    "element_entrance": "Staggered slide-up (Y: 20px -> 0px)",
+    "chart_animation": "Grow from bottom (Bars), Draw path (Lines), Scale up (Pie)",
+    "hover_lift": "translate-y-[-2px] transition-transform"
+  },
+  "accessibility": {
+    "contrast": "WCAG AA compliant (4.5:1 for normal text)",
+    "interactive": "All buttons must have :focus-visible styles (ring-2 ring-offset-2)",
+    "aria": "Charts must have descriptive captions or table alternatives"
+  },
+  "instructions_to_main_agent": {
+    "framework": "React + Tailwind + Shadcn UI",
+    "state_management": "Use Context API or Zustand for user session data",
+    "charting": "Use Recharts (responsive container)",
+    "critical": [
+      "DO NOT create a separate page for results. Render them conditionally below the form.",
+      "Ensure data isolation: Clear state when user logs out or switches context.",
+      "Use 'sonner' for toast notifications.",
+      "Implement real-time form validation."
+    ]
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭 for icons.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Use 'sonner' for toasts"
+  ]
+}
