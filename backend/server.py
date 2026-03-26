@@ -225,19 +225,29 @@ async def get_current_admin(payload: Dict[str, Any] = Depends(get_token_payload)
     return admin_settings
 
 
-def normalize_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def normalize_rows(rows: List[Dict[str, Any]], strict_count: bool = True) -> List[Dict[str, Any]]:
     normalized: List[Dict[str, Any]] = []
     for raw in rows:
         area = clean_phrase(raw.get("area", ""))
         issue = clean_phrase(raw.get("issue", ""))
         phase = standardize_phase(raw.get("phase"))
 
-        if raw.get("count") is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Count cannot be empty")
+        count_raw = raw.get("count")
+        if (
+            count_raw is None
+            or (isinstance(count_raw, str) and not count_raw.strip())
+            or pd.isna(count_raw)
+        ):
+            if strict_count:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Count cannot be empty")
+            continue
+
         try:
-            count_value = int(float(raw.get("count")))
+            count_value = int(float(count_raw))
         except (TypeError, ValueError) as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Count must be numeric") from exc
+            if strict_count:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Count must be numeric") from exc
+            continue
 
         if count_value < 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Count must be non-negative")
@@ -294,6 +304,7 @@ def dataframe_to_rows(dataframe: pd.DataFrame) -> List[Dict[str, Any]]:
         normalized_columns.get("area")
         or normalized_columns.get("block")
         or normalized_columns.get("areablock")
+        or normalized_columns.get("district")
     )
     issue_column = (
         normalized_columns.get("issue")
@@ -307,25 +318,66 @@ def dataframe_to_rows(dataframe: pd.DataFrame) -> List[Dict[str, Any]]:
         or normalized_columns.get("number")
     )
 
-    if not area_column or not issue_column or not count_column:
+    before_column = (
+        normalized_columns.get("beforeawareness")
+        or normalized_columns.get("before")
+        or normalized_columns.get("preawareness")
+        or normalized_columns.get("pre")
+    )
+    after_column = (
+        normalized_columns.get("afterawareness")
+        or normalized_columns.get("after")
+        or normalized_columns.get("postawareness")
+        or normalized_columns.get("post")
+    )
+
+    if not area_column or not issue_column:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="CSV/XLSX must include Area, Issue, and Count columns",
+            detail="CSV/XLSX must include Area and Issue columns",
         )
 
     rows: List[Dict[str, Any]] = []
     filled = dataframe.fillna("")
-    for _, row in filled.iterrows():
-        rows.append(
-            {
-                "area": row.get(area_column, ""),
-                "issue": row.get(issue_column, ""),
-                "phase": row.get(phase_column, None) if phase_column else None,
-                "count": row.get(count_column, 0),
-            }
-        )
 
-    return normalize_rows(rows)
+    if count_column:
+        for _, row in filled.iterrows():
+            rows.append(
+                {
+                    "area": row.get(area_column, ""),
+                    "issue": row.get(issue_column, ""),
+                    "phase": row.get(phase_column, None) if phase_column else None,
+                    "count": row.get(count_column, None),
+                }
+            )
+        return normalize_rows(rows, strict_count=False)
+
+    if before_column or after_column:
+        for _, row in filled.iterrows():
+            if before_column:
+                rows.append(
+                    {
+                        "area": row.get(area_column, ""),
+                        "issue": row.get(issue_column, ""),
+                        "phase": "Before Awareness",
+                        "count": row.get(before_column, None),
+                    }
+                )
+            if after_column:
+                rows.append(
+                    {
+                        "area": row.get(area_column, ""),
+                        "issue": row.get(issue_column, ""),
+                        "phase": "After Awareness",
+                        "count": row.get(after_column, None),
+                    }
+                )
+        return normalize_rows(rows, strict_count=False)
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="CSV/XLSX must include Count or Before/After Awareness columns",
+    )
 
 
 def extract_rows_from_pdf_text(text: str) -> List[Dict[str, Any]]:
@@ -480,13 +532,9 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     if has_awareness_data:
         line_mode = "awareness"
-        pie_data = [
-            {"name": "Before Awareness", "value": total_before},
-            {"name": "After Awareness", "value": total_after},
-        ]
-        pie_title = "Before vs After Awareness (Pie)"
-
         if focus_mode == "single-issue-multi-area":
+            pie_data = [{"name": name, "value": count} for name, count in area_counter.most_common()]
+            pie_title = f"{focus_label} Distribution by Area (Pie)"
             bar_data = [
                 {
                     "label": area_name,
@@ -508,6 +556,8 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             line_title = f"{focus_label}: Before vs After by Area (Line)"
 
         elif focus_mode == "single-area-multi-issue":
+            pie_data = [{"name": name, "value": count} for name, count in issue_counter.most_common()]
+            pie_title = f"{focus_label}: Issue Breakdown (Pie)"
             bar_data = [
                 {
                     "label": issue_name,
@@ -528,6 +578,11 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             bar_title = f"{focus_label}: Before vs After by Issue (Bar)"
             line_title = f"{focus_label}: Before vs After by Issue (Line)"
         else:
+            pie_data = [
+                {"name": "Before Awareness", "value": total_before},
+                {"name": "After Awareness", "value": total_after},
+            ]
+            pie_title = "Before vs After Awareness (Pie)"
             bar_data = [
                 {
                     "label": area_name,

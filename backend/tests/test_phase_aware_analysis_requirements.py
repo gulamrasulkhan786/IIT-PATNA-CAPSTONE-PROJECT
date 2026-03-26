@@ -105,7 +105,8 @@ def test_manual_both_phases_explicitly_compares_before_vs_after(api_client):
     assert data["chart_data"]["phase_scope"] == "both"
     assert data["chart_data"]["has_awareness_data"] is True
     assert data["chart_data"]["line_mode"] == "awareness"
-    assert "Before vs After" in data["chart_data"]["pie_title"]
+    assert "Distribution by Area" in data["chart_data"]["pie_title"]
+    assert "Before vs After" in data["chart_data"]["bar_title"]
     assert data["summary"]["before_total"] == 26
     assert data["summary"]["after_total"] == 14
     assert isinstance(data["summary"]["awareness_change_percent"], (int, float))

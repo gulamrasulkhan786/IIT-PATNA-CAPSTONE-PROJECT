@@ -82,7 +82,7 @@ def test_manual_analysis_single_issue_multi_area_focus(api_client):
     data = response.json()
     assert data["chart_data"]["focus_mode"] == "single-issue-multi-area"
     if data["chart_data"]["has_awareness_data"]:
-        assert "Before vs After" in data["chart_data"]["pie_title"]
+        assert "Distribution by Area" in data["chart_data"]["pie_title"]
         assert "Before vs After" in data["chart_data"]["bar_title"]
     else:
         assert "Distribution by Area" in data["chart_data"]["pie_title"]
@@ -106,7 +106,7 @@ def test_manual_analysis_single_area_multi_issue_focus(api_client):
     data = response.json()
     assert data["chart_data"]["focus_mode"] == "single-area-multi-issue"
     if data["chart_data"]["has_awareness_data"]:
-        assert "Before vs After" in data["chart_data"]["pie_title"]
+        assert "Issue Breakdown" in data["chart_data"]["pie_title"]
         assert "Before vs After" in data["chart_data"]["bar_title"]
     else:
         assert "Issue Breakdown" in data["chart_data"]["pie_title"]

@@ -30,8 +30,12 @@
   - Single area + multi-issue
   - Mixed datasets
   - Phase scope: before-only / after-only / both / unphased
+- For **all input methods** (manual, text, file):
+  - one issue + many areas => area-wise distribution analysis
+  - one area + many issues => issue-wise distribution analysis
 - If both phases exist, charts compare Before vs After (pie/bar/line) and insights identify improvement vs needs-more-effort areas/issues.
 - Structured table sections with headings: **Before Awareness Table** / **After Awareness Table** when applicable.
+- File parser now supports both long format (`Area,Issue,Phase,Count`) and wide phase columns (`Area,Issue,Before Awareness,After Awareness`).
 - Download options: combined report PDF + individual chart/table PDFs.
 - Community submission form + user submissions.
 - Admin dashboard: view/delete submissions, view/delete uploaded datasets, export CSV reports.
