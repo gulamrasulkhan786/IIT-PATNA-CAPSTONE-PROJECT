@@ -46,7 +46,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -602,6 +601,48 @@ const getChartPayload = (analysis) => {
   };
 };
 
+const ChartCanvas = ({ testId, className = "h-72", children }) => {
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    const updateSize = () => {
+      const rect = element.getBoundingClientRect();
+      setSize({
+        width: Math.max(Math.floor(rect.width), 1),
+        height: Math.max(Math.floor(rect.height), 1),
+      });
+    };
+
+    updateSize();
+
+    let resizeObserver;
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => updateSize());
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener("resize", updateSize);
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      window.removeEventListener("resize", updateSize);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className={className} data-testid={testId}>
+      {size.width > 1 && size.height > 1 ? children(size) : null}
+    </div>
+  );
+};
+
 const ResultsPanel = ({ analysis, sectionLabel }) => {
   const tableRef = useRef(null);
   const pieRef = useRef(null);
@@ -743,18 +784,18 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
             <CardDescription>Labels are shown below to prevent overlap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-72" data-testid="issue-distribution-chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={105} label={false} labelLine={false}>
+            <ChartCanvas testId="issue-distribution-chart-container" className="h-72">
+              {({ width, height }) => (
+                <PieChart width={width} height={height}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={Math.min(105, Math.floor(width * 0.26))} label={false} labelLine={false}>
                     {pieData.map((item, index) => (
                       <Cell key={item.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
-            </div>
+              )}
+            </ChartCanvas>
             <div className="mt-4 grid gap-2 sm:grid-cols-2" data-testid="pie-chart-legend-grid">
               {pieData.map((item, index) => (
                 <div
@@ -775,9 +816,9 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
             <CardTitle className="font-heading text-xl">{barTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72" data-testid="area-comparison-chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
+            <ChartCanvas testId="area-comparison-chart-container" className="h-72">
+              {({ width, height }) => (
+                <BarChart width={width} height={height} data={barData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
                   <XAxis
                     dataKey="label"
                     angle={-18}
@@ -799,8 +840,8 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
                     <Bar dataKey="count" fill="#0F172A" radius={[8, 8, 0, 0]} />
                   )}
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
+              )}
+            </ChartCanvas>
           </CardContent>
         </Card>
       </div>
@@ -810,9 +851,9 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
           <CardTitle className="font-heading text-xl">{lineTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-72" data-testid="line-comparison-chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
+          <ChartCanvas testId="line-comparison-chart-container" className="h-72">
+            {({ width, height }) => (
+              <LineChart width={width} height={height} data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
                 <XAxis
                   dataKey="label"
                   angle={-18}
@@ -834,8 +875,8 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
                   <Line type="monotone" dataKey="value" stroke="#0F172A" strokeWidth={2.5} />
                 )}
               </LineChart>
-            </ResponsiveContainer>
-          </div>
+            )}
+          </ChartCanvas>
         </CardContent>
       </Card>
 
