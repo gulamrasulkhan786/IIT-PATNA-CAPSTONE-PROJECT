@@ -585,6 +585,7 @@ const getChartPayload = (analysis) => {
   const lineData = chartData.line_data || [];
   const lineMode = chartData.line_mode || (chartData.has_awareness_data ? "awareness" : "single");
   const tableRows = chartData.table_rows || analysis?.rows || [];
+  const phaseTables = chartData.phase_tables || { before: [], after: [], unphased: [] };
 
   return {
     pieData,
@@ -592,6 +593,8 @@ const getChartPayload = (analysis) => {
     lineData,
     lineMode,
     tableRows,
+    phaseTables,
+    hasAwarenessData: Boolean(chartData.has_awareness_data),
     pieTitle: chartData.pie_title || "Issue Distribution (Pie)",
     barTitle: chartData.bar_title || "Area Comparison (Bar)",
     lineTitle: chartData.line_title || (lineMode === "awareness" ? "Before vs After Awareness (Line)" : "Trend (Line)"),
@@ -616,11 +619,44 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
     lineData,
     lineMode,
     tableRows,
+    phaseTables,
+    hasAwarenessData,
     pieTitle,
     barTitle,
     lineTitle,
     focusMode,
   } = getChartPayload(analysis);
+
+  const awarenessDisplay = hasAwarenessData
+    ? `${analysis.summary?.awareness_change_percent ?? 0}%`
+    : "N/A";
+  const hasPhaseSplitTables = (phaseTables.before?.length || 0) > 0 || (phaseTables.after?.length || 0) > 0;
+
+  const renderStructuredTable = (rows, title, testIdPrefix) => (
+    <div className="space-y-3" data-testid={`${testIdPrefix}-section`}>
+      <h3 className="font-heading text-lg font-semibold text-slate-900" data-testid={`${testIdPrefix}-title`}>{title}</h3>
+      <Table data-testid={`${testIdPrefix}-table`}>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="uppercase tracking-wider">Area</TableHead>
+            <TableHead className="uppercase tracking-wider">Issue</TableHead>
+            <TableHead className="uppercase tracking-wider">Phase</TableHead>
+            <TableHead className="uppercase tracking-wider">Count</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row, index) => (
+            <TableRow key={`${testIdPrefix}-${row.area}-${row.issue}-${index}`} data-testid={`${testIdPrefix}-row-${index}`}>
+              <TableCell className="whitespace-normal break-words">{row.area}</TableCell>
+              <TableCell className="whitespace-normal break-words">{row.issue}</TableCell>
+              <TableCell className="whitespace-normal break-words">{row.phase || "N/A"}</TableCell>
+              <TableCell className="font-mono" data-testid={`${testIdPrefix}-count-${index}`}>{row.count}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   const downloadCombined = async () => {
     const sections = [
@@ -678,7 +714,7 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
           </div>
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4" data-testid="summary-awareness-change-card">
             <p className="text-xs uppercase tracking-wide text-slate-500">Awareness Change %</p>
-            <p className="font-mono text-2xl font-semibold text-slate-900" data-testid="summary-awareness-change-value">{analysis.summary?.awareness_change_percent ?? 0}%</p>
+            <p className="font-mono text-2xl font-semibold text-slate-900" data-testid="summary-awareness-change-value">{awarenessDisplay}</p>
           </div>
         </CardContent>
       </Card>
@@ -692,27 +728,11 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
             {focusMode === "mixed" && "Table is grouped by area, issue, and phase."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table data-testid="analysis-structured-table">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="uppercase tracking-wider">Area</TableHead>
-                <TableHead className="uppercase tracking-wider">Issue</TableHead>
-                <TableHead className="uppercase tracking-wider">Phase</TableHead>
-                <TableHead className="uppercase tracking-wider">Count</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tableRows.map((row, index) => (
-                <TableRow key={`${row.area}-${row.issue}-${index}`} data-testid={`analysis-table-row-${index}`}>
-                  <TableCell className="whitespace-normal break-words">{row.area}</TableCell>
-                  <TableCell className="whitespace-normal break-words">{row.issue}</TableCell>
-                  <TableCell className="whitespace-normal break-words">{row.phase || "N/A"}</TableCell>
-                  <TableCell className="font-mono" data-testid={`analysis-table-count-${index}`}>{row.count}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="space-y-6">
+          {hasPhaseSplitTables && phaseTables.before?.length > 0 && renderStructuredTable(phaseTables.before, "Before Awareness Table", "before-awareness-table")}
+          {hasPhaseSplitTables && phaseTables.after?.length > 0 && renderStructuredTable(phaseTables.after, "After Awareness Table", "after-awareness-table")}
+          {!hasPhaseSplitTables && renderStructuredTable(tableRows, "Combined Table", "combined-awareness-table")}
+          {hasPhaseSplitTables && phaseTables.unphased?.length > 0 && renderStructuredTable(phaseTables.unphased, "Unphased Table", "unphased-awareness-table")}
         </CardContent>
       </Card>
 
@@ -770,7 +790,14 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="count" fill="#0F172A" radius={[8, 8, 0, 0]} />
+                  {lineMode === "awareness" ? (
+                    <>
+                      <Bar dataKey="before" name="Before Awareness" fill="#C2410C" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="after" name="After Awareness" fill="#10B981" radius={[8, 8, 0, 0]} />
+                    </>
+                  ) : (
+                    <Bar dataKey="count" fill="#0F172A" radius={[8, 8, 0, 0]} />
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             </div>

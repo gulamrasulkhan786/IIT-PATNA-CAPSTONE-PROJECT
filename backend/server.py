@@ -382,6 +382,16 @@ def top_three_text(counter: Counter) -> str:
     return text
 
 
+def list_with_etc(values: List[str], limit: int = 3) -> str:
+    if not values:
+        return ""
+    shown = values[:limit]
+    text = ", ".join(shown)
+    if len(values) > limit:
+        text = f"{text}, etc"
+    return text
+
+
 def aggregate_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     grouped: Dict[tuple, int] = defaultdict(int)
     for row in rows:
@@ -403,81 +413,88 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     total_before = 0
     total_after = 0
+    phase_labeled_count = 0
 
     for row in rows:
         issue_counter[row["issue"]] += row["count"]
         area_counter[row["area"]] += row["count"]
 
         if row.get("phase") == "Before Awareness":
+            phase_labeled_count += 1
             awareness_by_area[row["area"]]["before"] += row["count"]
             awareness_by_issue[row["issue"]]["before"] += row["count"]
             total_before += row["count"]
         elif row.get("phase") == "After Awareness":
+            phase_labeled_count += 1
             awareness_by_area[row["area"]]["after"] += row["count"]
             awareness_by_issue[row["issue"]]["after"] += row["count"]
             total_after += row["count"]
 
-    issue_distribution_default = [
-        {"name": issue_name, "value": count}
-        for issue_name, count in issue_counter.most_common()
-    ]
-    area_comparison_default = [
-        {"area": area_name, "count": count}
-        for area_name, count in area_counter.most_common()
-    ]
-
-    awareness_line: List[Dict[str, Any]] = []
-    awareness_observations: List[str] = []
+    issue_distribution_default = [{"name": issue_name, "value": count} for issue_name, count in issue_counter.most_common()]
+    area_comparison_default = [{"area": area_name, "count": count} for area_name, count in area_counter.most_common()]
 
     has_awareness_data = total_before > 0 and total_after > 0
-    if has_awareness_data:
-        for area_name in sorted(awareness_by_area.keys()):
-            before_count = awareness_by_area[area_name]["before"]
-            after_count = awareness_by_area[area_name]["after"]
-            change = before_count - after_count
-            awareness_line.append(
-                {
-                    "label": area_name,
-                    "before": before_count,
-                    "after": after_count,
-                    "change": change,
-                }
-            )
-            if after_count < before_count:
-                awareness_observations.append(
-                    f"Reports in {area_name} decreased after awareness activities."
-                )
-            elif after_count > before_count:
-                awareness_observations.append(
-                    f"{area_name} shows higher reports after awareness activities, indicating further awareness work is needed."
-                )
+    if phase_labeled_count == 0:
+        phase_scope = "unphased"
+    elif has_awareness_data:
+        phase_scope = "both"
+    elif total_before > 0:
+        phase_scope = "before-only"
     else:
-        awareness_line = [{"label": item["area"], "value": item["count"]} for item in area_comparison_default]
+        phase_scope = "after-only"
 
     unique_issues = list(issue_counter.keys())
     unique_areas = list(area_counter.keys())
 
     focus_mode = "mixed"
     focus_label = ""
+
     pie_data = issue_distribution_default
-    bar_data = [{"label": item["area"], "count": item["count"]} for item in area_comparison_default]
-    line_data = awareness_line
-    line_mode = "awareness" if has_awareness_data else "single"
+    bar_data: List[Dict[str, Any]] = [{"label": item["area"], "count": item["count"]} for item in area_comparison_default]
+    line_data: List[Dict[str, Any]] = [{"label": item["area"], "value": item["count"]} for item in area_comparison_default]
+    line_mode = "single"
+
     pie_title = "Issue Distribution (Pie)"
     bar_title = "Area Comparison (Bar)"
-    line_title = "Before vs After Awareness (Line)" if has_awareness_data else "Area-Wise Trend (Line)"
-    table_rows = aggregate_rows(rows)
-
-    top_issue = issue_distribution_default[0]["name"] if issue_distribution_default else "N/A"
-    top_area = area_comparison_default[0]["area"] if area_comparison_default else "N/A"
+    line_title = "Area-Wise Trend (Line)"
 
     if len(unique_issues) == 1 and len(unique_areas) > 1:
         focus_mode = "single-issue-multi-area"
         focus_label = unique_issues[0]
         pie_data = [{"name": name, "value": count} for name, count in area_counter.most_common()]
         bar_data = [{"label": name, "count": count} for name, count in area_counter.most_common()]
-        line_mode = "awareness" if has_awareness_data else "single"
-        if has_awareness_data:
+        line_data = [{"label": name, "value": count} for name, count in area_counter.most_common()]
+        pie_title = f"{focus_label} Distribution by Area (Pie)"
+        bar_title = f"{focus_label} Distribution by Area (Bar)"
+        line_title = f"{focus_label} Trend by Area (Line)"
+
+    elif len(unique_areas) == 1 and len(unique_issues) > 1:
+        focus_mode = "single-area-multi-issue"
+        focus_label = unique_areas[0]
+        pie_data = [{"name": name, "value": count} for name, count in issue_counter.most_common()]
+        bar_data = [{"label": name, "count": count} for name, count in issue_counter.most_common()]
+        line_data = [{"label": name, "value": count} for name, count in issue_counter.most_common()]
+        pie_title = f"{focus_label}: Issue Breakdown (Pie)"
+        bar_title = f"{focus_label}: Issue Comparison (Bar)"
+        line_title = f"{focus_label}: Issue Trend (Line)"
+
+    if has_awareness_data:
+        line_mode = "awareness"
+        pie_data = [
+            {"name": "Before Awareness", "value": total_before},
+            {"name": "After Awareness", "value": total_after},
+        ]
+        pie_title = "Before vs After Awareness (Pie)"
+
+        if focus_mode == "single-issue-multi-area":
+            bar_data = [
+                {
+                    "label": area_name,
+                    "before": awareness_by_area[area_name]["before"],
+                    "after": awareness_by_area[area_name]["after"],
+                }
+                for area_name, _ in area_counter.most_common()
+            ]
             line_data = [
                 {
                     "label": area_name,
@@ -487,28 +504,18 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 }
                 for area_name, _ in area_counter.most_common()
             ]
-        else:
-            line_data = [{"label": name, "value": count} for name, count in area_counter.most_common()]
+            bar_title = f"{focus_label}: Before vs After by Area (Bar)"
+            line_title = f"{focus_label}: Before vs After by Area (Line)"
 
-        pie_title = f"{focus_label} Distribution by Area (Pie)"
-        bar_title = f"{focus_label} Distribution by Area (Bar)"
-        line_title = (
-            f"{focus_label}: Before vs After by Area (Line)"
-            if has_awareness_data
-            else f"{focus_label} Trend by Area (Line)"
-        )
-        table_rows = [
-            {"area": name, "issue": focus_label, "phase": "All Phases", "count": count}
-            for name, count in area_counter.most_common()
-        ]
-
-    elif len(unique_areas) == 1 and len(unique_issues) > 1:
-        focus_mode = "single-area-multi-issue"
-        focus_label = unique_areas[0]
-        pie_data = [{"name": name, "value": count} for name, count in issue_counter.most_common()]
-        bar_data = [{"label": name, "count": count} for name, count in issue_counter.most_common()]
-        line_mode = "awareness" if has_awareness_data else "single"
-        if has_awareness_data:
+        elif focus_mode == "single-area-multi-issue":
+            bar_data = [
+                {
+                    "label": issue_name,
+                    "before": awareness_by_issue[issue_name]["before"],
+                    "after": awareness_by_issue[issue_name]["after"],
+                }
+                for issue_name, _ in issue_counter.most_common()
+            ]
             line_data = [
                 {
                     "label": issue_name,
@@ -518,51 +525,100 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 }
                 for issue_name, _ in issue_counter.most_common()
             ]
+            bar_title = f"{focus_label}: Before vs After by Issue (Bar)"
+            line_title = f"{focus_label}: Before vs After by Issue (Line)"
         else:
-            line_data = [{"label": name, "value": count} for name, count in issue_counter.most_common()]
+            bar_data = [
+                {
+                    "label": area_name,
+                    "before": awareness_by_area[area_name]["before"],
+                    "after": awareness_by_area[area_name]["after"],
+                }
+                for area_name, _ in area_counter.most_common()
+            ]
+            line_data = [
+                {
+                    "label": area_name,
+                    "before": awareness_by_area[area_name]["before"],
+                    "after": awareness_by_area[area_name]["after"],
+                    "change": awareness_by_area[area_name]["before"] - awareness_by_area[area_name]["after"],
+                }
+                for area_name, _ in area_counter.most_common()
+            ]
+            bar_title = "Before vs After by Area (Bar)"
+            line_title = "Before vs After by Area (Line)"
 
-        pie_title = f"{focus_label}: Issue Breakdown (Pie)"
-        bar_title = f"{focus_label}: Issue Comparison (Bar)"
-        line_title = (
-            f"{focus_label}: Before vs After by Issue (Line)"
-            if has_awareness_data
-            else f"{focus_label}: Issue Trend (Line)"
-        )
-        table_rows = [
-            {"area": focus_label, "issue": name, "phase": "All Phases", "count": count}
-            for name, count in issue_counter.most_common()
-        ]
+    table_rows = aggregate_rows(rows)
+    before_table_rows = [row for row in table_rows if row["phase"] == "Before Awareness"]
+    after_table_rows = [row for row in table_rows if row["phase"] == "After Awareness"]
+    unphased_table_rows = [
+        row for row in table_rows if row["phase"] not in {"Before Awareness", "After Awareness"}
+    ]
 
+    top_issue = issue_distribution_default[0]["name"] if issue_distribution_default else "N/A"
+    top_area = area_comparison_default[0]["area"] if area_comparison_default else "N/A"
     total_count = sum(item["value"] for item in issue_distribution_default)
-    awareness_change_percent = (
-        round(((total_before - total_after) / total_before) * 100, 2)
-        if total_before > 0
-        else 0
-    )
+
+    awareness_change_percent: Optional[float] = None
+    if has_awareness_data and total_before > 0:
+        awareness_change_percent = round(((total_before - total_after) / total_before) * 100, 2)
 
     insight_parts: List[str] = []
-    if focus_mode == "single-issue-multi-area":
-        insight_parts.append(
-            f"For {focus_label}, highest area reports are: {top_three_text(area_counter)}."
-        )
+
+    if has_awareness_data:
+        insight_parts.append(f"Before Awareness total is {total_before}, and After Awareness total is {total_after}.")
+
+        improved_messages: List[str] = []
+        worsened_messages: List[str] = []
+
+        if focus_mode == "single-area-multi-issue":
+            for issue_name, counts in awareness_by_issue.items():
+                before_value = counts["before"]
+                after_value = counts["after"]
+                if after_value < before_value:
+                    improved_messages.append(
+                        f"awareness is working for {issue_name} in {focus_label} ({before_value}→{after_value})"
+                    )
+                elif after_value > before_value:
+                    worsened_messages.append(
+                        f"need more effort in {focus_label} for {issue_name} ({before_value}→{after_value})"
+                    )
+        else:
+            subject = focus_label if focus_mode == "single-issue-multi-area" else "this dataset"
+            for area_name, counts in awareness_by_area.items():
+                before_value = counts["before"]
+                after_value = counts["after"]
+                if after_value < before_value:
+                    improved_messages.append(
+                        f"awareness is working in {area_name} for {subject} ({before_value}→{after_value})"
+                    )
+                elif after_value > before_value:
+                    worsened_messages.append(
+                        f"need more effort in {area_name} for {subject} ({before_value}→{after_value})"
+                    )
+
+        if improved_messages:
+            insight_parts.append(f"Positive trend: {list_with_etc(improved_messages)}.")
+        if worsened_messages:
+            insight_parts.append(f"Needs improvement: {list_with_etc(worsened_messages)}.")
+        if not improved_messages and not worsened_messages:
+            insight_parts.append("Before and after values are equal, so awareness impact is currently neutral.")
+
+    elif focus_mode == "single-issue-multi-area":
+        phase_text = "Before Awareness" if phase_scope == "before-only" else "After Awareness" if phase_scope == "after-only" else "Current"
+        insight_parts.append(f"{phase_text} data for {focus_label} across areas: {top_three_text(area_counter)}.")
         if top_area != "N/A":
             insight_parts.append(f"{top_area} needs more awareness campaign for {focus_label}.")
     elif focus_mode == "single-area-multi-issue":
-        insight_parts.append(
-            f"In {focus_label}, issue distribution is: {top_three_text(issue_counter)}."
-        )
+        phase_text = "Before Awareness" if phase_scope == "before-only" else "After Awareness" if phase_scope == "after-only" else "Current"
+        insight_parts.append(f"{phase_text} issue distribution in {focus_label}: {top_three_text(issue_counter)}.")
         if top_issue != "N/A":
             insight_parts.append(f"{focus_label} needs more awareness on {top_issue} because it is highest.")
     else:
-        insight_parts.extend(
-            [
-                f"{top_area} area shows the highest total reports.",
-                f"{top_issue} is the most frequently reported issue in this dataset.",
-            ]
-        )
-
-    if awareness_observations:
-        insight_parts.append(awareness_observations[0])
+        insight_parts.extend([
+            f"{top_area} area shows the highest total reports.",
+            f"{top_issue} is the most frequently reported issue in this dataset.",
+        ])
 
     return {
         "summary": {
@@ -570,10 +626,13 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             "top_issue": top_issue,
             "top_area": top_area,
             "awareness_change_percent": awareness_change_percent,
+            "before_total": total_before,
+            "after_total": total_after,
         },
         "chart_data": {
             "focus_mode": focus_mode,
             "focus_label": focus_label,
+            "phase_scope": phase_scope,
             "pie_data": pie_data,
             "bar_data": bar_data,
             "line_data": line_data,
@@ -583,6 +642,11 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             "bar_title": bar_title,
             "line_title": line_title,
             "table_rows": table_rows,
+            "phase_tables": {
+                "before": before_table_rows,
+                "after": after_table_rows,
+                "unphased": unphased_table_rows,
+            },
         },
         "insight": " ".join(insight_parts),
     }
