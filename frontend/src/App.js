@@ -1057,7 +1057,7 @@ const ManualEntryPage = () => {
 
 const TextInputPage = () => {
   const { userToken } = useAuth();
-  const [text, setText] = useState("Siwan : women safety 2 , environment 3\nPatna : women safety 10 , environment 5");
+  const [text, setText] = useState("Before Awareness:\nPatna : environment 15\nSiwan : environment 20\n\nAfter Awareness:\nPatna : environment 11\nSiwan : environment 14");
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -1088,7 +1088,7 @@ const TextInputPage = () => {
       <Card className="border border-slate-200 shadow-sm" data-testid="text-input-form-card">
         <CardHeader>
           <CardTitle className="font-heading text-xl">Paste Issue Text</CardTitle>
-          <CardDescription>Flexible parser accepts commas, mixed casing, and multiline format.</CardDescription>
+          <CardDescription>Flexible parser supports Before/After Awareness text, comma-separated entries, and multiline formats.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
