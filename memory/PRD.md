@@ -36,6 +36,8 @@
 - If both phases exist, charts compare Before vs After (pie/bar/line) and insights identify improvement vs needs-more-effort areas/issues.
 - Structured table sections with headings: **Before Awareness Table** / **After Awareness Table** when applicable.
 - File parser now supports both long format (`Area,Issue,Phase,Count`) and wide phase columns (`Area,Issue,Before Awareness,After Awareness`).
+- Text parser now supports phase headings and structured lines (e.g., `Before Awareness: ...`, `Area : issue count`, and `Area Issue Before Awareness Count`).
+- Comparison safety hardened: if Before/After records do not have exact matching pairs required for comparison, system does not assume missing values as zero.
 - Download options: combined report PDF + individual chart/table PDFs.
 - Community submission form + user submissions.
 - Admin dashboard: view/delete submissions, view/delete uploaded datasets, export CSV reports.

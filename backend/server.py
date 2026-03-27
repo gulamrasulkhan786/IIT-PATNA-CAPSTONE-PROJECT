@@ -540,6 +540,8 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     area_counter: Counter = Counter()
     awareness_by_area: Dict[str, Dict[str, int]] = defaultdict(lambda: {"before": 0, "after": 0})
     awareness_by_issue: Dict[str, Dict[str, int]] = defaultdict(lambda: {"before": 0, "after": 0})
+    before_pair_counter: Dict[tuple, int] = defaultdict(int)
+    after_pair_counter: Dict[tuple, int] = defaultdict(int)
 
     total_before = 0
     total_after = 0
@@ -553,11 +555,13 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             phase_labeled_count += 1
             awareness_by_area[row["area"]]["before"] += row["count"]
             awareness_by_issue[row["issue"]]["before"] += row["count"]
+            before_pair_counter[(row["area"], row["issue"])] += row["count"]
             total_before += row["count"]
         elif row.get("phase") == "After Awareness":
             phase_labeled_count += 1
             awareness_by_area[row["area"]]["after"] += row["count"]
             awareness_by_issue[row["issue"]]["after"] += row["count"]
+            after_pair_counter[(row["area"], row["issue"])] += row["count"]
             total_after += row["count"]
 
     issue_distribution_default = [{"name": issue_name, "value": count} for issue_name, count in issue_counter.most_common()]
@@ -673,33 +677,45 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 line_title = f"{focus_label}: Before vs After by Issue (Line)"
 
         else:
-            comparable_areas = [
-                area_name
-                for area_name, _ in area_counter.most_common()
-                if awareness_by_area[area_name]["before"] > 0 and awareness_by_area[area_name]["after"] > 0
-            ]
-            if comparable_areas:
+            common_pairs = sorted(set(before_pair_counter.keys()).intersection(set(after_pair_counter.keys())))
+            if common_pairs:
+                area_pair_totals: Dict[str, Dict[str, int]] = defaultdict(lambda: {"before": 0, "after": 0})
+                for area_name, issue_name in common_pairs:
+                    area_pair_totals[area_name]["before"] += before_pair_counter[(area_name, issue_name)]
+                    area_pair_totals[area_name]["after"] += after_pair_counter[(area_name, issue_name)]
+
+                comparable_areas = sorted(
+                    area_pair_totals.keys(),
+                    key=lambda area_name: area_pair_totals[area_name]["before"] + area_pair_totals[area_name]["after"],
+                    reverse=True,
+                )
                 has_awareness_data = True
                 line_mode = "awareness"
                 pie_data = [
-                    {"name": "Before Awareness", "value": total_before},
-                    {"name": "After Awareness", "value": total_after},
+                    {
+                        "name": "Before Awareness",
+                        "value": sum(area_pair_totals[area_name]["before"] for area_name in comparable_areas),
+                    },
+                    {
+                        "name": "After Awareness",
+                        "value": sum(area_pair_totals[area_name]["after"] for area_name in comparable_areas),
+                    },
                 ]
                 pie_title = "Before vs After Awareness (Pie)"
                 bar_data = [
                     {
                         "label": area_name,
-                        "before": awareness_by_area[area_name]["before"],
-                        "after": awareness_by_area[area_name]["after"],
+                        "before": area_pair_totals[area_name]["before"],
+                        "after": area_pair_totals[area_name]["after"],
                     }
                     for area_name in comparable_areas
                 ]
                 line_data = [
                     {
                         "label": area_name,
-                        "before": awareness_by_area[area_name]["before"],
-                        "after": awareness_by_area[area_name]["after"],
-                        "change": awareness_by_area[area_name]["before"] - awareness_by_area[area_name]["after"],
+                        "before": area_pair_totals[area_name]["before"],
+                        "after": area_pair_totals[area_name]["after"],
+                        "change": area_pair_totals[area_name]["before"] - area_pair_totals[area_name]["after"],
                     }
                     for area_name in comparable_areas
                 ]
@@ -745,9 +761,27 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                     )
         else:
             subject = focus_label if focus_mode == "single-issue-multi-area" else "this dataset"
-            for area_name, counts in awareness_by_area.items():
-                before_value = counts["before"]
-                after_value = counts["after"]
+            if focus_mode == "mixed":
+                comparable_area_rows = [
+                    (
+                        item.get("label", ""),
+                        int(item.get("before", 0)),
+                        int(item.get("after", 0)),
+                    )
+                    for item in line_data
+                    if item.get("before") is not None and item.get("after") is not None
+                ]
+            else:
+                comparable_area_rows = [
+                    (
+                        area_name,
+                        counts["before"],
+                        counts["after"],
+                    )
+                    for area_name, counts in awareness_by_area.items()
+                ]
+
+            for area_name, before_value, after_value in comparable_area_rows:
                 if before_value <= 0 or after_value <= 0:
                     continue
                 if after_value < before_value:
@@ -767,9 +801,20 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             insight_parts.append("Before and after values are equal, so awareness impact is currently neutral.")
 
     elif phase_scope == "both":
-        insight_parts.append(
-            "Before and After data are present, but exact matching area/issue pairs were not found for direct comparison."
-        )
+        if focus_mode == "single-issue-multi-area":
+            insight_parts.append(
+                f"Before and After data are present, but exact matching area/issue pairs were not found for direct comparison of {focus_label}."
+            )
+            insight_parts.append(f"Current {focus_label} area distribution: {top_three_text(area_counter)}.")
+        elif focus_mode == "single-area-multi-issue":
+            insight_parts.append(
+                f"Before and After data are present, but exact matching area/issue pairs were not found for direct comparison in {focus_label}."
+            )
+            insight_parts.append(f"Current issue distribution in {focus_label}: {top_three_text(issue_counter)}.")
+        else:
+            insight_parts.append(
+                "Before and After data are present, but exact matching area/issue pairs were not found for direct comparison."
+            )
 
     elif focus_mode == "single-issue-multi-area":
         phase_text = "Before Awareness" if phase_scope == "before-only" else "After Awareness" if phase_scope == "after-only" else "Current"
