@@ -3,3 +3,4 @@ gunicorn
 pymongo
 dnspython
 pandas
+python-dotenv
