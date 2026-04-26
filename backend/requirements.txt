@@ -1,6 +1,9 @@
-flask
-gunicorn
-pymongo
-dnspython
-pandas
+fastapi
+uvicorn[standard]
 python-dotenv
+motor
+pandas
+python-jose
+passlib[bcrypt]
+email-validator
+python-multipart
