@@ -186,12 +186,13 @@ def standardize_phase(phase: Optional[str]) -> Optional[str]:
     return PHASE_MAP.get(key)
 
 
-def hash_password(password: str) -> str:
+def hash_password(password):
+    password = password[:72]   # limit fix
     return pwd_context.hash(password)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(password, hashed_password)
+    return pwd_context.verify(password[:72], hashed_password)
 
 
 def create_access_token(subject: str, role: str, extra: Optional[Dict[str, Any]] = None) -> str:
