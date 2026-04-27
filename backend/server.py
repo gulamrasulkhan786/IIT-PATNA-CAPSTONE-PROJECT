@@ -892,6 +892,7 @@ else:
 # ===== NO DATA =====
 if total_before == 0 and total_after == 0:
     insight_text = "Insufficient data to measure awareness impact. Collect proper data."
+
     
     return {
         "summary": {
