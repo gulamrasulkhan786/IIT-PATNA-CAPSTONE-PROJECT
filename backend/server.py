@@ -744,61 +744,57 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     if has_awareness_data and total_before > 0:
         awareness_change_percent = round(((total_before - total_after) / total_before) * 100, 2)
 
-# ===== FINAL SMART INSIGHT =====
+    # ===== FINAL SMART INSIGHT =====
 
-change = total_before - total_after
+    change = total_before - total_after
 
-percentage = 0
-if total_before > 0:
-    percentage = round((change / total_before) * 100)
+    percentage = 0
+    if total_before > 0:
+        percentage = round((change / total_before) * 100)
 
-# ===== NO DATA (TOP PRIORITY) =====
-if total_before == 0 and total_after == 0:
-    insight_text = "Insufficient data to measure awareness impact. Collect proper data."
+    if total_before == 0 and total_after == 0:
+        insight_text = "Insufficient data to measure awareness impact. Collect proper data."
 
-# ===== IMPROVEMENT =====
-elif change > 0:
-    if percentage >= 50:
-        tone = "strong improvement"
-        suggestion_text = "Scale this awareness model to other areas."
-    elif percentage >= 20:
-        tone = "good improvement"
-        suggestion_text = "Continue campaigns and expand reach."
+    elif change > 0:
+        if percentage >= 50:
+            tone = "strong improvement"
+            suggestion_text = "Scale this awareness model to other areas."
+        elif percentage >= 20:
+            tone = "good improvement"
+            suggestion_text = "Continue campaigns and expand reach."
+        else:
+            tone = "slight improvement"
+            suggestion_text = "Need stronger awareness efforts and better targeting."
+
+        insight_text = (
+            f"{top_issue} issues reduced by {percentage}% in {top_area} after awareness, "
+            f"showing {tone}. {suggestion_text}"
+        )
+
+    elif change < 0:
+        percentage = abs(percentage)
+
+        if percentage >= 50:
+            tone = "serious worsening"
+            suggestion_text = "Urgent intervention required. Current strategy is failing."
+        elif percentage >= 20:
+            tone = "noticeable increase"
+            suggestion_text = "Revise awareness strategy and improve execution."
+        else:
+            tone = "slight increase"
+            suggestion_text = "Monitor closely and improve campaign effectiveness."
+
+        insight_text = (
+            f"{top_issue} issues increased by {percentage}% in {top_area} after awareness, "
+            f"indicating {tone}. {suggestion_text}"
+        )
+
     else:
-        tone = "slight improvement"
-        suggestion_text = "Need stronger awareness efforts and better targeting."
-
-    insight_text = (
-        f"{top_issue} issues reduced by {percentage}% in {top_area} after awareness, "
-        f"showing {tone}. {suggestion_text}"
-    )
-
-# ===== WORSENING =====
-elif change < 0:
-    percentage = abs(percentage)
-
-    if percentage >= 50:
-        tone = "serious worsening"
-        suggestion_text = "Urgent intervention required. Current strategy is failing."
-    elif percentage >= 20:
-        tone = "noticeable increase"
-        suggestion_text = "Revise awareness strategy and improve execution."
-    else:
-        tone = "slight increase"
-        suggestion_text = "Monitor closely and improve campaign effectiveness."
-
-    insight_text = (
-        f"{top_issue} issues increased by {percentage}% in {top_area} after awareness, "
-        f"indicating {tone}. {suggestion_text}"
-    )
-
-# ===== NO CHANGE =====
-else:
-    insight_text = (
-        f"No change observed in {top_issue} issues in {top_area} after awareness. "
-        f"Awareness efforts are not impactful. Strategy needs improvement."
-    )
-    
+        insight_text = (
+            f"No change observed in {top_issue} issues in {top_area} after awareness. "
+            f"Awareness efforts are not impactful. Strategy needs improvement."
+        )
+        
     return {
         "summary": {
             "total_count": total_count,
