@@ -744,100 +744,6 @@ def compute_analysis(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     if has_awareness_data and total_before > 0:
         awareness_change_percent = round(((total_before - total_after) / total_before) * 100, 2)
 
-    insight_parts: List[str] = []
-
-    if has_awareness_data:
-        insight_parts.append(f"Before Awareness total is {total_before}, and After Awareness total is {total_after}.")
-
-        improved_messages: List[str] = []
-        worsened_messages: List[str] = []
-
-        if focus_mode == "single-area-multi-issue":
-            for issue_name, counts in awareness_by_issue.items():
-                before_value = counts["before"]
-                after_value = counts["after"]
-                if before_value <= 0 or after_value <= 0:
-                    continue
-                if after_value < before_value:
-                    improved_messages.append(
-                        f"awareness is working for {issue_name} in {focus_label} ({before_value}→{after_value})"
-                    )
-                elif after_value > before_value:
-                    worsened_messages.append(
-                        f"need more effort in {focus_label} for {issue_name} ({before_value}→{after_value})"
-                    )
-        else:
-            subject = focus_label if focus_mode == "single-issue-multi-area" else "this dataset"
-            if focus_mode == "mixed":
-                comparable_area_rows = [
-                    (
-                        item.get("label", ""),
-                        int(item.get("before", 0)),
-                        int(item.get("after", 0)),
-                    )
-                    for item in line_data
-                    if item.get("before") is not None and item.get("after") is not None
-                ]
-            else:
-                comparable_area_rows = [
-                    (
-                        area_name,
-                        counts["before"],
-                        counts["after"],
-                    )
-                    for area_name, counts in awareness_by_area.items()
-                ]
-
-            for area_name, before_value, after_value in comparable_area_rows:
-                if before_value <= 0 or after_value <= 0:
-                    continue
-                if after_value < before_value:
-                    improved_messages.append(
-                        f"awareness is working in {area_name} for {subject} ({before_value}→{after_value})"
-                    )
-                elif after_value > before_value:
-                    worsened_messages.append(
-                        f"need more effort in {area_name} for {subject} ({before_value}→{after_value})"
-                    )
-
-        if improved_messages:
-            insight_parts.append(f"Positive trend: {list_with_etc(improved_messages)}.")
-        if worsened_messages:
-            insight_parts.append(f"Needs improvement: {list_with_etc(worsened_messages)}.")
-        if not improved_messages and not worsened_messages:
-            insight_parts.append("Before and after values are equal, so awareness impact is currently neutral.")
-
-    elif phase_scope == "both":
-        if focus_mode == "single-issue-multi-area":
-            insight_parts.append(
-                f"Before and After data are present, but exact matching area/issue pairs were not found for direct comparison of {focus_label}."
-            )
-            insight_parts.append(f"Current {focus_label} area distribution: {top_three_text(area_counter)}.")
-        elif focus_mode == "single-area-multi-issue":
-            insight_parts.append(
-                f"Before and After data are present, but exact matching area/issue pairs were not found for direct comparison in {focus_label}."
-            )
-            insight_parts.append(f"Current issue distribution in {focus_label}: {top_three_text(issue_counter)}.")
-        else:
-            insight_parts.append(
-                "Before and After data are present, but exact matching area/issue pairs were not found for direct comparison."
-            )
-
-    elif focus_mode == "single-issue-multi-area":
-        phase_text = "Before Awareness" if phase_scope == "before-only" else "After Awareness" if phase_scope == "after-only" else "Current"
-        insight_parts.append(f"{phase_text} data for {focus_label} across areas: {top_three_text(area_counter)}.")
-        if top_area != "N/A":
-            insight_parts.append(f"{top_area} needs more awareness campaign for {focus_label}.")
-    elif focus_mode == "single-area-multi-issue":
-        phase_text = "Before Awareness" if phase_scope == "before-only" else "After Awareness" if phase_scope == "after-only" else "Current"
-        insight_parts.append(f"{phase_text} issue distribution in {focus_label}: {top_three_text(issue_counter)}.")
-        if top_issue != "N/A":
-            insight_parts.append(f"{focus_label} needs more awareness on {top_issue} because it is highest.")
-    else:
-        insight_parts.extend([
-            f"{top_area} area shows the highest total reports.",
-            f"{top_issue} is the most frequently reported issue in this dataset.",
-        ])
 # ===== FINAL SMART INSIGHT =====
 
 change = total_before - total_after
@@ -846,8 +752,12 @@ percentage = 0
 if total_before > 0:
     percentage = round((change / total_before) * 100)
 
+# ===== NO DATA (TOP PRIORITY) =====
+if total_before == 0 and total_after == 0:
+    insight_text = "Insufficient data to measure awareness impact. Collect proper data."
+
 # ===== IMPROVEMENT =====
-if change > 0:
+elif change > 0:
     if percentage >= 50:
         tone = "strong improvement"
         suggestion_text = "Scale this awareness model to other areas."
@@ -888,10 +798,6 @@ else:
         f"No change observed in {top_issue} issues in {top_area} after awareness. "
         f"Awareness efforts are not impactful. Strategy needs improvement."
     )
-
-# ===== NO DATA =====
-if total_before == 0 and total_after == 0:
-    insight_text = "Insufficient data to measure awareness impact. Collect proper data."
     
     return {
         "summary": {
