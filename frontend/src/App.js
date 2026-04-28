@@ -99,11 +99,21 @@ const downloadBlob = (blob, filename) => {
 };
 
 const AuthProvider = ({ children }) => {
-  const [userToken, setUserToken] = useState(localStorage.getItem(USER_TOKEN_KEY));
+  const [userToken, setUserToken] = useState(() => {
+  return localStorage.getItem(USER_TOKEN_KEY) || null;
+});
   const [user, setUser] = useState(() => {
+  try {
     const cached = localStorage.getItem(USER_PROFILE_KEY);
-    return cached ? JSON.parse(cached) : null;
-  });
+
+    if (!cached || cached === "undefined") return null;
+
+    return JSON.parse(cached);
+  } catch (e) {
+    console.error("Invalid user data in localStorage:", e);
+    return null;
+  }
+});
   const [adminToken, setAdminToken] = useState(localStorage.getItem(ADMIN_TOKEN_KEY));
   const [adminUsername, setAdminUsername] = useState(localStorage.getItem(ADMIN_USER_KEY));
 
