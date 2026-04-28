@@ -1328,7 +1328,9 @@ const AdminLoginPage = () => {
     try {
       await adminLogin({ username, password });
       toast.success("Admin login successful");
-      navigate("/admin/dashboard");
+      setTimeout(() => {
+  navigate("/admin/dashboard");
+}, 100);
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Admin login failed");
     } finally {
