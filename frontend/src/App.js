@@ -823,9 +823,9 @@ if (summaryElement) {
             <CardDescription>Labels are shown below to prevent overlap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartCanvas testId="issue-distribution-chart-container" className="h-72">
+            <ChartCanvas testId="issue-distribution-chart-container" className="h-[450px]">
               {({ width, height }) => (
-                <PieChart width={width} height={height}>
+                <PieChart width={width} height={height - 100}>
                   <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={Math.min(105, Math.floor(width * 0.26))} label={false} labelLine={false}>
                     {pieData.map((item, index) => (
                       <Cell key={item.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -835,7 +835,7 @@ if (summaryElement) {
                 </PieChart>
               )}
             </ChartCanvas>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2" data-testid="pie-chart-legend-grid">
+            <div className="mt-14 pb-8 grid gap-2 sm:grid-cols-2" data-testid="pie-chart-legend-grid">
               {pieData.map((item, index) => (
                 <div
                   key={`${item.name}-${index}`}
@@ -890,29 +890,47 @@ if (summaryElement) {
           <CardTitle className="font-heading text-xl">{lineTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartCanvas testId="line-comparison-chart-container" className="h-72">
+          <ChartCanvas testId="line-comparison-chart-container" className="h-[500px]">
             {({ width, height }) => (
-              <LineChart width={width} height={height} data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
+              <LineChart width={width} height={height - 40} data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
                 <XAxis
-                  dataKey="label"
-                  angle={-18}
-                  textAnchor="end"
-                  interval={0}
-                  height={66}
-                  tickFormatter={toShortLabel}
-                  tick={{ fontSize: 11 }}
-                />
+  dataKey="area"
+  angle={-18}
+  textAnchor="end"
+  interval={0}
+  height={66}
+  tickFormatter={toShortLabel}
+  tick={{ fontSize: 11 }}
+/>
                 <YAxis />
                 <Tooltip />
                 <Legend />
                 {lineMode === "awareness" ? (
-                  <>
-                    <Line type="monotone" dataKey="before" stroke="#C2410C" strokeWidth={2.5} />
-                    <Line type="monotone" dataKey="after" stroke="#10B981" strokeWidth={2.5} />
-                  </>
-                ) : (
-                  <Line type="monotone" dataKey="value" stroke="#0F172A" strokeWidth={2.5} />
-                )}
+  <>
+    <Line
+      type="monotone"
+      dataKey="before"
+      stroke="#C2410C"
+      strokeWidth={3}
+      dot={{ r: 4 }}
+    />
+    <Line
+      type="monotone"
+      dataKey="after"
+      stroke="#10B981"
+      strokeWidth={3}
+      dot={{ r: 4 }}
+    />
+  </>
+) : (
+  <Line
+    type="monotone"
+    dataKey="value"
+    stroke="#0F172A"
+    strokeWidth={3}
+    dot={{ r: 4 }}
+  />
+)}
               </LineChart>
             )}
           </ChartCanvas>
