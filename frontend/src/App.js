@@ -51,9 +51,8 @@ import {
   YAxis,
 } from "recharts";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL
-  ? `${process.env.REACT_APP_BACKEND_URL}/api`
-  : "https://awarness-data-anylasis.onrender.com/api";
+const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 const api = axios.create({ baseURL: API_BASE });
 
 const USER_TOKEN_KEY = "community_user_token";
