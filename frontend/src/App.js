@@ -1360,8 +1360,6 @@ const AdminLoginPage = () => {
       <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="font-heading text-2xl">Admin Login</CardTitle>
-          <CardDescription>Default Username: IITPATNACAPSTONE | Password: computerscience</CardDescription>
-        </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit} data-testid="admin-login-form">
             <Input
