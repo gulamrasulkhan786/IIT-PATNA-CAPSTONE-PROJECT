@@ -726,15 +726,37 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
     ].filter((section) => section.node);
 
     const pdf = new jsPDF("p", "mm", "a4");
+    const pageHeight = pdf.internal.pageSize.getHeight();
     let y = 14;
+    const summaryElement = document.getElementById("summary-section");
+
+if (summaryElement) {
+  const canvas = await html2canvas(summaryElement, { scale: 2 });
+  const imgData = canvas.toDataURL("image/png");
+
+  const imgWidth = 190;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+
+  if (y + imgHeight > pageHeight) {
+    pdf.addPage();
+    y = 14;
+  }
+
+  pdf.setFontSize(14);
+  pdf.text("Summary", 10, y);
+  y += 6;
+
+  pdf.addImage(imgData, "PNG", 10, y, imgWidth, imgHeight);
+  y += imgHeight + 12;
+}
 
     for (let index = 0; index < sections.length; index += 1) {
       const section = sections[index];
       const image = await captureNodeAsImage(section.node);
       const width = pdf.internal.pageSize.getWidth() - 20;
       const props = pdf.getImageProperties(image);
-      const height = (props.height * width) / props.width;
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      const height = (props.height * width) / props.width;    
 
       if (y + height + 12 > pageHeight) {
         pdf.addPage();
@@ -753,7 +775,7 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
 
   return (
     <div className="space-y-6" data-testid={`${sectionLabel.toLowerCase().replace(/\s+/g, "-")}-results-panel`}>
-      <Card className="border border-slate-200 shadow-sm">
+      <Card id="summary-section" className="border border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="font-heading text-xl" data-testid="analysis-summary-heading">Summary</CardTitle>
         </CardHeader>
