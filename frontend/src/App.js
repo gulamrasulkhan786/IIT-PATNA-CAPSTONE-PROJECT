@@ -1358,10 +1358,15 @@ const AdminLoginPage = () => {
   return (
     <div className="mx-auto max-w-lg" data-testid="admin-login-page">
       <Card className="border border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="font-heading text-2xl">Admin Login</CardTitle>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit} data-testid="admin-login-form">
+
+  <CardHeader>
+    <CardTitle className="font-heading text-2xl">
+      Admin Login
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent>
+    <form className="space-y-4" onSubmit={handleSubmit} data-testid="admin-login-form">
             <Input
               data-testid="admin-login-username-input"
               placeholder="Username"
