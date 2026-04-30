@@ -567,7 +567,14 @@ const RegisterPage = () => {
 };
 
 const captureNodeAsImage = async (node) => {
-  const canvas = await html2canvas(node, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  const canvas = await html2canvas(node, {
+  scale: 3,
+  useCORS: true,
+  backgroundColor: "#ffffff",
+  logging: false,
+  windowWidth: document.body.scrollWidth,
+  windowHeight: document.body.scrollHeight
+});
   return canvas.toDataURL("image/png");
 };
 
@@ -726,12 +733,18 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
     ].filter((section) => section.node);
 
     const pdf = new jsPDF("p", "mm", "a4");
+    await new Promise(resolve => setTimeout(resolve, 700));
     const pageHeight = pdf.internal.pageSize.getHeight();
     let y = 14;
     const summaryElement = document.getElementById("summary-section");
 
 if (summaryElement) {
-  const canvas = await html2canvas(summaryElement, { scale: 2 });
+  const canvas = await html2canvas(summaryElement, {
+  scale: 3,
+  useCORS: true,
+  backgroundColor: "#ffffff",
+  logging: false
+});
   const imgData = canvas.toDataURL("image/png");
 
   const imgWidth = 190;
