@@ -605,7 +605,15 @@ const getChartPayload = (analysis) => {
   const pieData = chartData.pie_data || chartData.issue_distribution || [];
   const barData = chartData.bar_data
     || (chartData.area_comparison || []).map((item) => ({ label: item.area, count: item.count }));
-  const lineData = chartData.line_data || [];
+  const lineDataRaw = chartData.line_data || [];
+
+const lineData =
+  lineDataRaw.length === 1
+    ? [
+        lineDataRaw[0],
+        { ...lineDataRaw[0] }
+      ]
+    : lineDataRaw;
   console.log("LINE DATA:", lineData);
   const lineMode = chartData.line_mode || (chartData.has_awareness_data ? "awareness" : "single");
   const tableRows = chartData.table_rows || analysis?.rows || [];
