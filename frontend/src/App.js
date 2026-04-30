@@ -605,15 +605,22 @@ const getChartPayload = (analysis) => {
   const pieData = chartData.pie_data || chartData.issue_distribution || [];
   const barData = chartData.bar_data
     || (chartData.area_comparison || []).map((item) => ({ label: item.area, count: item.count }));
-  const lineDataRaw = chartData.line_data || [];
+  const raw = chartData.area_comparison || [];
 
-const lineData =
-  lineDataRaw.length === 1
-    ? [
-        lineDataRaw[0],
-        { ...lineDataRaw[0] }
-      ]
-    : lineDataRaw;
+let lineData = raw.map(item => ({
+  label: item.area,
+  before: item.before || 0,
+  after: item.after || 0,
+}));
+
+if (lineData.length === 1) {
+  const item = lineData[0];
+
+  lineData = [
+    { ...item, label: item.label + " (1)" },
+    { ...item, label: item.label + " (2)" }
+  ];
+}
   console.log("LINE DATA:", lineData);
   const lineMode = chartData.line_mode || (chartData.has_awareness_data ? "awareness" : "single");
   const tableRows = chartData.table_rows || analysis?.rows || [];
@@ -927,7 +934,7 @@ if (summaryElement) {
             {({ width, height }) => (
               <LineChart width={width} height={height - 40} data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
                 <XAxis
-  dataKey="area"
+  dataKey="label"
   angle={-18}
   textAnchor="end"
   interval={0}
