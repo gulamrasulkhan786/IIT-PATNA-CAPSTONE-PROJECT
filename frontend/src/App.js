@@ -42,13 +42,9 @@ import {
   BarChart,
   Cell,
   Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL
@@ -687,7 +683,6 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
   const tableRef = useRef(null);
   const pieRef = useRef(null);
   const barRef = useRef(null);
-  const lineRef = useRef(null);
   const insightRef = useRef(null);
 
   if (!analysis) {
@@ -744,7 +739,6 @@ const ResultsPanel = ({ analysis, sectionLabel }) => {
       { node: tableRef.current, title: "Structured Table" },
       { node: pieRef.current, title: pieTitle },
       { node: barRef.current, title: barTitle },
-      { node: lineRef.current, title: lineTitle },
       { node: insightRef.current, title: "Insight" },
     ].filter((section) => section.node);
 
@@ -925,66 +919,7 @@ if (summaryElement) {
         </Card>
       </div>
 
-      <Card ref={lineRef} className="border border-slate-200 shadow-sm" data-testid="line-comparison-chart-card">
-        <CardHeader>
-          <CardTitle className="font-heading text-xl">{lineTitle}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartCanvas testId="line-comparison-chart-container" className="h-[500px]">
-            {({ width, height }) => (
-              <LineChart width={width} height={height - 40} data={lineData} margin={{ top: 16, right: 10, left: 6, bottom: 36 }}>
-                <XAxis
-  dataKey="label"
-  angle={-18}
-  textAnchor="end"
-  interval={0}
-  height={66}
-  tickFormatter={toShortLabel}
-  tick={{ fontSize: 11 }}
-/>
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {lineMode === "awareness" ? (
-  <>
-    <Line
-      type="monotone"
-      dataKey="before"
-      stroke="#C2410C"
-      strokeWidth={3}
-      dot={{ r: 4 }}
-    />
-    <Line
-      type="monotone"
-      dataKey="after"
-      stroke="#10B981"
-      strokeWidth={3}
-      dot={{ r: 4 }}
-    />
-  </>
-) : (
-  <Line
-    type="monotone"
-    dataKey="value"
-    stroke="#0F172A"
-    strokeWidth={3}
-    dot={{ r: 4 }}
-  />
-)}
-              </LineChart>
-            )}
-          </ChartCanvas>
-        </CardContent>
-      </Card>
-
-      <Card ref={insightRef} className="border-l-4 border-l-emerald-500 border-r border-t border-b border-slate-200 bg-emerald-50 shadow-sm" data-testid="analysis-insight-card">
-        <CardHeader>
-          <CardTitle className="font-heading text-xl">Automatic Insight</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-800 sm:text-base" data-testid="analysis-insight-text">{analysis.insight}</p>
-        </CardContent>
-      </Card>
+      
 
       <Card className="border border-slate-200 shadow-sm" data-testid="download-section-card">
         <CardHeader>
