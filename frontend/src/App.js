@@ -606,6 +606,7 @@ const getChartPayload = (analysis) => {
   const barData = chartData.bar_data
     || (chartData.area_comparison || []).map((item) => ({ label: item.area, count: item.count }));
   const lineData = chartData.line_data || [];
+  console.log("LINE DATA:", lineData);
   const lineMode = chartData.line_mode || (chartData.has_awareness_data ? "awareness" : "single");
   const tableRows = chartData.table_rows || analysis?.rows || [];
   const phaseTables = chartData.phase_tables || { before: [], after: [], unphased: [] };
@@ -766,6 +767,7 @@ if (summaryElement) {
 
     for (let index = 0; index < sections.length; index += 1) {
       const section = sections[index];
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const image = await captureNodeAsImage(section.node);
       const width = pdf.internal.pageSize.getWidth() - 20;
       const props = pdf.getImageProperties(image);
@@ -836,10 +838,20 @@ if (summaryElement) {
             <CardDescription>Labels are shown below to prevent overlap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartCanvas testId="issue-distribution-chart-container" className="h-[450px]">
+            <ChartCanvas testId="issue-distribution-chart-container" className="h-[550px]" style={{ overflow: "visible" }}>
               {({ width, height }) => (
-                <PieChart width={width} height={height - 100}>
-                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={Math.min(105, Math.floor(width * 0.26))} label={false} labelLine={false}>
+                <PieChart width={width} height={height}>
+                  <Pie
+  data={pieData}
+  dataKey="value"
+  nameKey="name"
+  cx="50%"
+  cy="45%"
+  outerRadius={Math.min(120, Math.floor(width * 0.28))}
+  label={false}
+  labelLine={false}
+>
+
                     {pieData.map((item, index) => (
                       <Cell key={item.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
