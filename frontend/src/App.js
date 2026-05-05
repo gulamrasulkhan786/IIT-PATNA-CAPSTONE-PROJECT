@@ -45,6 +45,8 @@ import {
   Pie,
   PieChart,
   Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL
