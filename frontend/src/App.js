@@ -921,7 +921,31 @@ if (summaryElement) {
         </Card>
       </div>
 
-      
+      <Card
+  ref={insightRef}
+  className="border border-slate-200 shadow-sm"
+  data-testid="analysis-insight-card"
+>
+  <CardHeader>
+    <CardTitle className="font-heading text-xl">
+      Insight
+    </CardTitle>
+    <CardDescription>
+      AI-generated awareness analysis insight.
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent>
+    <div
+      className="rounded-md bg-slate-50 p-4 text-sm leading-7 text-slate-700 whitespace-pre-wrap"
+      data-testid="analysis-insight-text"
+    >
+      {analysis.insight ||
+        analysis.summary?.insight ||
+        "No insight available."}
+    </div>
+  </CardContent>
+</Card>
 
       <Card className="border border-slate-200 shadow-sm" data-testid="download-section-card">
         <CardHeader>
