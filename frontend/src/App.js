@@ -931,7 +931,7 @@ if (summaryElement) {
       Insight
     </CardTitle>
     <CardDescription>
-      AI-generated awareness analysis insight.
+      awareness analysis insight.
     </CardDescription>
   </CardHeader>
 
