@@ -919,7 +919,7 @@ if (summaryElement) {
             </ChartCanvas>
           </CardContent>
         </Card>
-      </div>
+
 
       <Card
   ref={insightRef}
@@ -943,10 +943,9 @@ if (summaryElement) {
       {analysis.insight ||
         analysis.summary?.insight ||
         "No insight available."}
-    </div>
   </CardContent>
 </Card>
-
+</div>
       <Card className="border border-slate-200 shadow-sm" data-testid="download-section-card">
         <CardHeader>
           <CardTitle className="font-heading text-xl">Download Options</CardTitle>
