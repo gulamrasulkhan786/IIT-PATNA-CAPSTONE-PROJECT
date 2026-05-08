@@ -185,9 +185,9 @@ const AuthProvider = ({ children }) => {
       const response = await api.get("/auth/me", authHeader(userToken));
       localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(response.data));
       setUser(response.data);
-    } catch {
-      clearUserSession();
-    }
+    catch (error) {
+  console.error(error);
+}
   }, [clearUserSession, userToken]);
 
   useEffect(() => {
@@ -619,7 +619,7 @@ if (lineData.length === 1) {
     { ...item, label: item.label + " (2)" }
   ];
 }
-  console.log("LINE DATA:", lineData);
+  
   const lineMode = chartData.line_mode || (chartData.has_awareness_data ? "awareness" : "single");
   const tableRows = chartData.table_rows || analysis?.rows || [];
   const phaseTables = chartData.phase_tables || { before: [], after: [], unphased: [] };
