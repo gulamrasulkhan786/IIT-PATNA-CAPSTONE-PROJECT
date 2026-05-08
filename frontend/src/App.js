@@ -943,6 +943,7 @@ if (summaryElement) {
       {analysis.insight ||
         analysis.summary?.insight ||
         "No insight available."}
+      </div>
   </CardContent>
 </Card>
 </div>
