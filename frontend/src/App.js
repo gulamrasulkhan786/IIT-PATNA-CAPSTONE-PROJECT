@@ -181,11 +181,11 @@ const AuthProvider = ({ children }) => {
     if (!userToken) {
       return;
     }
-    try {
-      const response = await api.get("/auth/me", authHeader(userToken));
-      localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(response.data));
-      setUser(response.data);
-    catch (error) {
+   try {
+  const response = await api.get("/auth/me", authHeader(userToken));
+  localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(response.data));
+  setUser(response.data);
+} catch (error) {
   console.error(error);
 }
   }, [clearUserSession, userToken]);
