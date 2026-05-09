@@ -12,7 +12,8 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -1225,3 +1226,17 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client() -> None:
     client.close()
+
+frontend_build_path = ROOT_DIR / "frontend" / "build"
+
+if frontend_build_path.exists():
+
+    app.mount(
+        "/static",
+        StaticFiles(directory=frontend_build_path / "static"),
+        name="static",
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_react_app(full_path: str):
+        return FileResponse(frontend_build_path / "index.html")
